@@ -8,5 +8,12 @@ edition = "2021"
 name = "webserver"
 path = "src/lib.rs"
 
+
+
 [dependencies]
 macros = { path = "../macros" }
+
+[build-dependencies]
+anyhow = "1.0"
+fs_extra = "1.2"
+glob = "0.3"

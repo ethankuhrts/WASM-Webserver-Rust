@@ -1,0 +1,1064 @@
+<html ml-view="top" ml-is-active="" ml-mode="complex" ml-update="aware" ml-stage="complete" style="--ml-background-lightness-limit:0.14; --ml-zoom:1 !important; color: rgb(209, 203, 199) !important;" ml-platform="desktop" ml-invert="" ml-scrollbar-style="ml-simple" ml-stage-mode="complete-complex"><head>
+    <title>
+      Decoding Social Security Numbers in One Step
+    </title>
+    <script src="../email.js"></script>
+    <script src="../openwindow.js"></script>
+    <script src="../auth.js"></script>
+    <script type="text/javascript" src="../jcal/jsr_class.js"> </script> 
+
+    <script>
+
+      var list = new Array(
+"001 to 003 New Hampshire",
+"004 to 007 Maine",
+"008 to 009 Vermont",
+"010 to 034 Massachusetts",
+"035 to 039 Rhode Island",
+"040 to 049 Connecticut",
+"050 to 134 New York",
+"135 to 158 New Jersey",
+"159 to 211 Pennsylvania",
+"212 to 220 Maryland",
+"221 to 222 Delaware",
+"223 to 231 Virginia (1936-2004)",
+"232 to 232 North Carolina and West Virginia",
+"233 to 236 West Virginia",
+"237 to 246 North Carolina (1936-2002)",
+"247 to 251 South Carolina (1936-1996)",
+"252 to 260 Georgia (1936-1997)",
+"261 to 267 Florida (1936-1980)",
+"268 to 302 Ohio",
+"303 to 317 Indiana",
+"318 to 361 Illinois",
+"362 to 386 Michigan",
+"387 to 399 Wisconsin",
+"400 to 407 Kentucky",
+"408 to 415 Tennessee (1936-2005)",
+"416 to 424 Alabama",
+"425 to 428 Mississippi (1936-2007)",
+"429 to 432 Arkansas (1936-2001)",
+"433 to 439 Louisiana (1936-1999)",
+"440 to 448 Oklahoma",
+"449 to 467 Texas (1936-1988)",
+"468 to 477 Minnesota",
+"478 to 485 Iowa",
+"486 to 500 Missouri",
+"501 to 502 North Dakota",
+"503 to 504 South Dakota",
+"505 to 508 Nebraska",
+"509 to 515 Kansas",
+"516 to 517 Montana",
+"518 to 519 Idaho",
+"520 to 520 Wyoming",
+"521 to 524 Colorado (1936-1996)",
+"525 to 525 New Mexico (1936-1993)",
+"526 to 527 Arizona (1936-1983)",
+"528 to 529 Utah (1936-1992)",
+"530 to 530 Nevada (1936-1997)",
+"531 to 539 Washington",
+"540 to 544 Oregon",
+"545 to 573 California (1936-1987)",
+"574 to 574 Alaska",
+"575 to 576 Hawaii (1936-2004)",
+"577 to 579 District of Columbia",
+"580 to 580 Virgin Islands",
+"580 to 584 Puerto Rico (1936-1985)",
+"585 to 585 New Mexico (1958-1993)",
+"586 to 586 Pacific Islands",
+"587 to 588 Mississippi (1964-2007)",
+"589 to 595 Florida (1980-2001)",
+"596 to 599 Puerto Rico (1985-....)",
+"600 to 601 Arizona (1983-2000)",
+"602 to 626 California (1987-....)",
+"627 to 645 Texas (1988-....)",
+"646 to 647 Utah (1989-....)",
+"648 to 649 New Mexico (1993-....)",
+"650 to 653 Colorado (1996-....)",
+"654 to 658 South Carolina (1997-....)",
+"659 to 665 Louisiana (2000-....)",
+"666 to 666 unassigned-1",
+"667 to 675 Georgia (1997-....)",
+"676 to 679 Arkansas (2001-....)",
+"680 to 680 Nevada (1997-....)",
+"681 to 690 North Carolina (2002-....)",
+"691 to 699 Virginia (2004-....)",
+"700 to 728 Railroad workers (1936-1963)",
+"729 to 733 Enumeraton at Entry (2003-....)",
+"734 to 749 unassigned-2",
+"750 to 751 Hawaii (2004-....)",
+"752 to 755 Mississippi (2007-....)",
+"756 to 763 Tennessee (2006-....)",
+"764 to 765 Arizona (2000-....)",
+"766 to 772 Florida (2001-....)",
+"773 to 799 unassigned-3",
+"800 to 899 not valid",
+"900 to 999 Individual Taxpayer Identification Number"
+      );
+
+      var reverseList = new Array();
+      for (var i=0; i<list.length; i++) {
+        reverseList[i] = list[i];
+      }
+
+      function CompareFunction(a, b) {
+        var aState = a.substr(11);
+        var bState = b.substr(11);
+        if (aState < bState) return -1;
+        if (aState > bState) return +1;
+        return 0;
+      }
+
+      reverseList.sort(CompareFunction);
+
+      function GetSSN() {
+        var ssn = document.display.state[document.display.state.selectedIndex].value;
+        for (var i=0; i<document.display.ssn.length; i++) {
+          if (document.display.ssn[i].text == ssn) {
+            document.display.ssn.selectedIndex = i;
+            break;
+          }
+        }
+      }
+
+      var offender = false;
+      if (document.referrer.indexOf("freecpnreport") != -1) {
+        offender = true;
+      }
+
+      function GetOffenders() {
+        // catch people coming from http://freecpnreport.in-u-s-a.com/
+
+        if (offender) {
+
+          // show offender message on the page
+
+          var object = document.getElementById("offenders");
+          object.style.display = "";
+
+          // generate a pop-up
+
+          var offenderMessage = 
+            "This page is involved with decoding Social Security Numbers (SSNs) in order to find out when and where " +
+            "they were issued.\n\n" +
+            "If you came here from a page that talks about restoring your credit rating, " +
+            "you are in the wrong place.\n\n" +
+            "Please don't ask me any questions about fixing credit ratings, obtaining new SSns, or obtaining CPNs (whatever that is).\n\n";
+
+          alert(offenderMessage);
+
+        }
+      }
+
+      function GetWhat() {
+        var state = document.display.stateReverse[document.display.stateReverse.selectedIndex].text;
+        var year = document.display.yearReverse[document.display.yearReverse.selectedIndex].text;
+        var code = document.display.code.value;
+
+        document.getElementById("what").innerHTML = "... please stand by ...";
+        var req = "https://stevemorse.org/ssn/ssnreverse.php?year=" + year + "&state=" + state + "&code=" + code;
+        bObj = new JSONscriptRequest(req); // create a new request object
+        bObj.buildScriptTag(); // build a dynamic script tag
+        bObj.addScriptTag(); // add the script to the page -- transfers control to ReverseCallback
+      }
+
+      function GetMore() {
+        var state = document.display.stateReverse[document.display.stateReverse.selectedIndex].text;
+        var year = document.display.yearReverse[document.display.yearReverse.selectedIndex].text;
+        var code = document.display.code.value;
+        var sslast = document.getElementById("what").innerHTML;
+
+        document.getElementById("what").innerHTML = "... please stand by ...";
+        var req = "https://stevemorse.org/ssn/ssnreverse.php?" +
+                  "year=" + year + "&state=" + state + "&sslast=" + sslast + "&code=" + code;
+        bObj = new JSONscriptRequest(req); // create a new request object
+        bObj.buildScriptTag(); // build a dynamic script tag
+        bObj.addScriptTag(); // add the script to the page -- transfers control to ReverseCallback
+      }
+
+      function CallbackReverse(what) {
+        document.getElementById("what").innerHTML = what;
+      }
+
+      function GetState() {
+        var state = document.display.ssn[document.display.ssn.selectedIndex].value;
+        for (var i=0; i<document.display.state.length; i++) {
+          if (document.display.state[i].text === state) {
+            document.display.state.selectedIndex = i;
+            break;
+          }
+        }
+      }
+
+      function AreaChanged() {
+        document.display.ssn2.selectedIndex = 0;
+          document.getElementById("wherewhen").innerHTML = "";
+      }
+
+      function GetWhereWhen() {
+
+        // do nothing if user selected the blank group (middle two digits)
+
+        if (document.display.ssn2.selectedIndex == 0) {
+          document.getElementById("wherewhen").innerHTML = "";
+          return;
+        }
+
+        // get the parameters
+
+        var ssn1 = document.display.ssn1[document.display.ssn1.selectedIndex].text;
+        var ssn2 = document.display.ssn2[document.display.ssn2.selectedIndex].text;
+        var code = document.display.code.value;
+
+        if (ssn1.charAt(0) == "9" && ssn2 >= "70" && ssn2 <= "88") {
+          wherewhen = ssn1 + "-" + ssn2 + "; Individual Taxpayer Identification Number";
+          document.getElementById("wherewhen").innerHTML = wherewhen;
+          return;
+        }
+
+        // call the web service
+
+        document.getElementById("wherewhen").innerHTML = "... please stand by ...";
+//        var req = "http://stevemorse.org/ssn/ssn2.php?ssn1=" + ssn1 + "&ssn2=" + ssn2 + "&code=" + code + "&auth=" + auth;
+        var req = "https://stevemorse.org/ssn/ssn.php?ssn1=" + ssn1 + "&ssn2=" + ssn2 + "&code=" + code;
+        bObj = new JSONscriptRequest(req); // create a new request object
+        bObj.buildScriptTag(); // build a dynamic script tag
+        bObj.addScriptTag(); // add the script to the page -- transfers control to Callback
+
+      }
+
+      function Callback(wherewhen) {
+        document.getElementById("wherewhen").innerHTML = wherewhen;
+      }
+
+      function GetCode() {
+        var req = "https://stevemorse.org/jcal/proxycode.php?auth=" + auth;
+//        var req = "http://stevemorse.org/jcal/proxycode.php?auth=" + auth;
+        bObj = new JSONscriptRequest(req); // create a new request object
+        bObj.buildScriptTag(); // build a dynamic script tag
+        bObj.addScriptTag(); // add the script to the page -- transfers control to Callback
+      }
+
+      var forwardPending = false;
+      var reversePending = false;
+      var morePending = false;
+
+      function CodeCallback(code) {
+        document.display.code.value = code;
+        if (forwardPending) {
+          GetWhereWhen();
+        } else if (reversePending) {
+          GetWhat();
+        } else if (morePending) {
+          GetMore();
+        }
+        forwardPending = false;
+        reversePending = false;
+        morePending = false;
+      }
+
+      function Validate() {
+        name = document.display.name.value;
+        var ssn11 = document.display.ssn11[document.display.ssn11.selectedIndex].text;
+        var ssn12 = document.display.ssn12[document.display.ssn12.selectedIndex].text;
+        var ssn13 = document.display.ssn13[document.display.ssn13.selectedIndex].text;
+        var ssn = ssn11 + "-" + ssn12 + "-" + ssn13;
+        var req = "https://stevemorse.org/ssn/ssnservice.php?" +
+          "name=" + name + "&ssn=" + ssn;
+        bObj = new JSONscriptRequest(req); // create a new request object
+        bObj.buildScriptTag(); // build a dynamic script tag
+        bObj.addScriptTag(); // add the script to the page -- transfers control to Callback
+        document.getElementById("validate").innerHTML = "Please stand by ...";
+      }
+
+      function ValidateCallback(result) {
+        document.getElementById("validate").innerHTML = result;
+      }
+
+      function ValidateChange() {
+        document.getElementById("validate").innerHTML = "Result will appear here";
+      }
+
+    </script>
+
+  <style id="midnight-lizard-dynamic-values">:root { 
+--ml-main-background-color:rgb(34, 36, 37);
+--ml-main-background-color-filtered:rgb(34, 36, 37);
+--ml-main-alt-background-color:rgb(24, 26, 27);
+--ml-main-alt-background-color-filtered:rgb(24, 26, 27);
+--ml-main-trans-background-color:rgba(34, 36, 37, 0.5);
+--ml-main-trans-alt-background-color:rgba(24, 26, 27, 0.3);
+--ml-main-text-color:rgb(209, 203, 199);
+--ml-main-trans-text-color:rgba(232, 229, 227, 0.6);
+--ml-main-text-color-filtered:rgb(209, 203, 199);
+--ml-main-border-color:rgb(123, 107, 101);
+--ml-main-trans-border-color:rgba(140, 122, 115, 0.3);
+--ml-main-range-fill-color:rgb(87, 74, 69);
+--ml-main-selection-color:rgb(12, 128, 223);
+--ml-main-selection-text-color:rgb(255, 255, 255);
+--ml-main-selection-shadow-color:rgba(0, 0, 0, 0.8);
+--ml-main-button-background-color:rgb(23, 27, 28);
+--ml-main-button-border-color:rgb(112, 97, 92);
+--ml-main-red-button-background-color:rgb(46, 5, 5);
+--ml-main-scrollbar-thumb-hover-color:rgb(107, 100, 97);
+--ml-main-scrollbar-thumb-normal-color:rgb(86, 80, 78);
+--ml-main-scrollbar-thumb-active-color:rgb(75, 70, 68);
+--ml-main-scrollbar-track-color:rgb(34, 36, 37);
+--ml-main-scrollbar-marks-color:rgb(209, 203, 199);
+--ml-main-scrollbar-shadow-color:rgba(0, 0, 0, 0.3);
+--ml-main-scrollbar-size:10px;
+--ml-main-moz-scrollbar-width:auto;
+--ml-main-moz-scrollbar-track-color:rgb(24, 26, 27);
+--ml-main-link-color:rgb(117, 182, 234);
+--ml-main-link-color-hover:rgb(144, 196, 238);
+--ml-main-link-color-active:rgb(113, 179, 234);
+--ml-main-visited-color:rgb(160, 117, 234);
+--ml-main-visited-color-hover:rgb(179, 144, 238);
+--ml-main-visited-color-active:rgb(157, 113, 234);
+--ml-main-scrollbar-marks-color-original:rgb(209, 203, 199);
+--ml-main-scrollbar-thumb-hover-color-original:rgb(107, 100, 97);
+--ml-main-scrollbar-thumb-normal-color-original:rgb(86, 80, 78);
+--ml-main-scrollbar-thumb-active-color-original:rgb(75, 70, 68);
+--ml-main-scrollbar-track-color-original:rgb(34, 36, 37);
+--ml-main-moz-scrollbar-track-color-original:rgb(24, 26, 27);
+--ml-main-scrollbar-shadow-color-original:rgba(0, 0, 0, 0.3);
+--ml-main-scrollbar-marks-color-filtered:rgb(209, 203, 199);
+--ml-main-scrollbar-thumb-hover-color-filtered:rgb(107, 100, 97);
+--ml-main-scrollbar-thumb-normal-color-filtered:rgb(86, 80, 78);
+--ml-main-scrollbar-thumb-active-color-filtered:rgb(75, 70, 68);
+--ml-main-scrollbar-track-color-filtered:rgb(34, 36, 37);
+--ml-main-moz-scrollbar-track-color-filtered:rgb(24, 26, 27);
+--ml-main-scrollbar-shadow-color-filtered:rgba(0, 0, 0, 0.3);
+--ml-background-saturation-limit:0.7;
+--ml-background-contrast:0.5;
+--ml-background-lightness-limit:0.14;
+--ml-background-gray-saturation:0.05;
+--ml-background-gray-hue:200;
+--ml-background-replace-all-hues:false;
+--ml-background-hue-gravity:0;
+--ml-highlighted-background-saturation-limit:0.91;
+--ml-highlighted-background-contrast:0.06;
+--ml-highlighted-background-lightness-limit:0.4;
+--ml-highlighted-background-gray-saturation:0.05;
+--ml-highlighted-background-gray-hue:200;
+--ml-highlighted-background-replace-all-hues:false;
+--ml-highlighted-background-hue-gravity:0;
+--ml-button-background-saturation-limit:0.8;
+--ml-button-background-contrast:0.04;
+--ml-button-background-lightness-limit:0.17;
+--ml-button-background-gray-saturation:0.1;
+--ml-button-background-gray-hue:190;
+--ml-button-background-replace-all-hues:false;
+--ml-button-background-hue-gravity:0;
+--ml-text-selection-saturation-limit:0.9;
+--ml-text-selection-contrast:0;
+--ml-text-selection-lightness-limit:0.46;
+--ml-text-selection-gray-saturation:0.9;
+--ml-text-selection-gray-hue:207;
+--ml-text-selection-replace-all-hues:true;
+--ml-text-selection-hue-gravity:0;
+--ml-text-saturation-limit:0.9;
+--ml-text-contrast:0.66;
+--ml-text-lightness-limit:0.9;
+--ml-text-gray-saturation:0.1;
+--ml-text-gray-hue:22;
+--ml-text-replace-all-hues:false;
+--ml-text-hue-gravity:0;
+--ml-highlighted-text-saturation-limit:1;
+--ml-highlighted-text-contrast:0.79;
+--ml-highlighted-text-lightness-limit:1;
+--ml-highlighted-text-gray-saturation:0.1;
+--ml-highlighted-text-gray-hue:22;
+--ml-highlighted-text-replace-all-hues:false;
+--ml-highlighted-text-hue-gravity:0;
+--ml-link-saturation-limit:0.8;
+--ml-link-contrast:0.55;
+--ml-link-lightness-limit:0.75;
+--ml-link-gray-saturation:0.74;
+--ml-link-gray-hue:207;
+--ml-link-replace-all-hues:false;
+--ml-link-hue-gravity:0.8;
+--ml-link-active-saturation-limit:0.8;
+--ml-link-active-contrast:0.55;
+--ml-link-active-lightness-limit:0.68;
+--ml-link-active-gray-saturation:0.74;
+--ml-link-active-gray-hue:207;
+--ml-link-active-replace-all-hues:false;
+--ml-link-active-hue-gravity:0.8;
+--ml-link-hover-saturation-limit:0.8;
+--ml-link-hover-contrast:0.61;
+--ml-link-hover-lightness-limit:0.83;
+--ml-link-hover-gray-saturation:0.74;
+--ml-link-hover-gray-hue:207;
+--ml-link-hover-replace-all-hues:false;
+--ml-link-hover-hue-gravity:0.8;
+--ml-visited-link-saturation-limit:0.8;
+--ml-visited-link-contrast:0.55;
+--ml-visited-link-lightness-limit:0.75;
+--ml-visited-link-gray-saturation:0.74;
+--ml-visited-link-gray-hue:262;
+--ml-visited-link-replace-all-hues:true;
+--ml-visited-link-hue-gravity:0;
+--ml-visited-link-hover-saturation-limit:0.8;
+--ml-visited-link-hover-contrast:0.61;
+--ml-visited-link-hover-lightness-limit:0.83;
+--ml-visited-link-hover-gray-saturation:0.74;
+--ml-visited-link-hover-gray-hue:262;
+--ml-visited-link-hover-replace-all-hues:true;
+--ml-visited-link-hover-hue-gravity:0;
+--ml-visited-link-active-saturation-limit:0.8;
+--ml-visited-link-active-contrast:0.55;
+--ml-visited-link-active-lightness-limit:0.68;
+--ml-visited-link-active-gray-saturation:0.74;
+--ml-visited-link-active-gray-hue:262;
+--ml-visited-link-active-replace-all-hues:true;
+--ml-visited-link-active-hue-gravity:0;
+--ml-text-shadow-saturation-limit:0.8;
+--ml-text-shadow-contrast:0.8;
+--ml-text-shadow-lightness-limit:1;
+--ml-text-shadow-gray-saturation:0.1;
+--ml-text-shadow-gray-hue:16;
+--ml-text-shadow-replace-all-hues:false;
+--ml-text-shadow-hue-gravity:0;
+--ml-border-saturation-limit:0.8;
+--ml-border-contrast:0.3;
+--ml-border-lightness-limit:0.5;
+--ml-border-gray-saturation:0.1;
+--ml-border-gray-hue:16;
+--ml-border-replace-all-hues:false;
+--ml-border-hue-gravity:0;
+--ml-button-border-saturation-limit:0.64;
+--ml-button-border-contrast:0.15;
+--ml-button-border-lightness-limit:0.4;
+--ml-button-border-gray-saturation:0.1;
+--ml-button-border-gray-hue:16;
+--ml-button-border-replace-all-hues:false;
+--ml-button-border-hue-gravity:0;
+--ml-scrollbar-hover-saturation-limit:0.05;
+--ml-scrollbar-hover-contrast:0;
+--ml-scrollbar-hover-lightness-limit:0.4;
+--ml-scrollbar-hover-gray-saturation:0.05;
+--ml-scrollbar-hover-gray-hue:16;
+--ml-scrollbar-hover-replace-all-hues:false;
+--ml-scrollbar-hover-hue-gravity:0;
+--ml-scrollbar-normal-saturation-limit:0.05;
+--ml-scrollbar-normal-contrast:0;
+--ml-scrollbar-normal-lightness-limit:0.32;
+--ml-scrollbar-normal-gray-saturation:0.05;
+--ml-scrollbar-normal-gray-hue:16;
+--ml-scrollbar-normal-replace-all-hues:false;
+--ml-scrollbar-normal-hue-gravity:0;
+--ml-scrollbar-active-saturation-limit:0.05;
+--ml-scrollbar-active-contrast:0;
+--ml-scrollbar-active-lightness-limit:0.28;
+--ml-scrollbar-active-gray-saturation:0.05;
+--ml-scrollbar-active-gray-hue:16;
+--ml-scrollbar-active-replace-all-hues:false;
+--ml-scrollbar-active-hue-gravity:0;
+--ml-image-saturation-limit:0.9;
+--ml-image-contrast:0.66;
+--ml-image-lightness-limit:0.8;
+--ml-image-gray-saturation:0.1;
+--ml-image-gray-hue:22;
+--ml-image-replace-all-hues:false;
+--ml-image-hue-gravity:0;
+--ml-svg-background-saturation-limit:0.8;
+--ml-svg-background-contrast:0.5;
+--ml-svg-background-lightness-limit:0.5;
+--ml-svg-background-gray-saturation:0.1;
+--ml-svg-background-gray-hue:190;
+--ml-svg-background-replace-all-hues:false;
+--ml-svg-background-hue-gravity:0;
+--ml-background-image-saturation-limit:0.8;
+--ml-background-image-contrast:0.5;
+--ml-background-image-lightness-limit:0.4;
+--ml-background-image-gray-saturation:0.05;
+--ml-background-image-gray-hue:200;
+--ml-background-image-replace-all-hues:false;
+--ml-background-image-hue-gravity:0;
+--ml-video-saturation-limit:1;
+--ml-video-contrast:0.5;
+--ml-video-lightness-limit:1;
+--ml-video-gray-saturation:0;
+--ml-video-gray-hue:0;
+--ml-video-replace-all-hues:false;
+--ml-video-hue-gravity:0;
+--ml-browser:Chrome!important;
+--ml-app-id:cphiklljfgkgjhbmmjifjknodgbkllaj;
+--ml-version:10.7.0;
+--ml-content-filter:'';
+--ml-blue-filter:'';
+--pdf-bg-filter:url("#pdf-bg-filter");
+--ml-invert:1!important;
+--ml-is-active:1!important;
+--ml-text-filter:saturate(0.7) brightness(0.86) hue-rotate(180deg) invert(1) brightness(0.9);
+--ml-contrast-text-filter:saturate(0.7) brightness(0.9) hue-rotate(180deg) invert(1) brightness(0.9);
+--ml-highlighted-text-filter:saturate(0.7) brightness(0.86) hue-rotate(180deg) invert(1) brightness(1);
+--ml-dynamic-content-text-filter:saturate(0.7) brightness(0.86) hue-rotate(180deg) invert(1) brightness(0.9);
+--ml-dynamic-content-contrast-text-filter:saturate(0.7) brightness(0.9) hue-rotate(180deg) invert(1) brightness(0.9);
+--ml-dynamic-content-highlighted-text-filter:saturate(0.7) brightness(0.86) hue-rotate(180deg) invert(1) brightness(1);
+--ml-image-filter:saturate(0.9) brightness(0.8);
+--ml-image-revert-filter:saturate(1.2);
+--ml-bg-image-revert-filter:saturate(1.1);
+--ml-button-revert-filter:saturate(1.1);
+--ml-text-revert-filter:saturate(1.2);
+--ml-video-revert-filter:saturate(1.3);
+--ml-bg-revert-filter:none; }</style><style id="midnight-lizard-pseudo-styles">[before-style="background-image"]:not(imp)::before{filter:saturate(0.8) brightness(0.4)!important}
+[before-style="inverted-background-image"]:not(imp)::before{filter:saturate(0.8) brightness(0.86) hue-rotate(180deg) invert(1)!important}
+[after-style="background-image"]:not(imp)::after{filter:saturate(0.8) brightness(0.4)!important}
+[after-style="inverted-background-image"]:not(imp)::after{filter:saturate(0.8) brightness(0.86) hue-rotate(180deg) invert(1)!important}</style><script id="midnight-lizard-page-script" type="text/javascript" src="chrome-extension://cphiklljfgkgjhbmmjifjknodgbkllaj/js/page-script.js"></script><script type="text/javascript" src="https://stevemorse.org/jcal/proxycode.php?auth=&amp;noCacheIE=1676440932546" id="YJscriptId1"></script><script type="text/javascript" src="https://stevemorse.org/ssn/ssn.php?ssn1=602&amp;ssn2=43&amp;code=0672310&amp;noCacheIE=1676440932816" id="YJscriptId2"></script><script type="text/javascript" src="https://stevemorse.org/jcal/proxycode.php?auth=&amp;noCacheIE=1676440941137" id="YJscriptId3"></script><script type="text/javascript" src="https://stevemorse.org/ssn/ssnreverse.php?year=2004&amp;state=Alabama&amp;code=9572410&amp;noCacheIE=1676440941297" id="YJscriptId4"></script><script type="text/javascript" src="https://stevemorse.org/jcal/proxycode.php?auth=&amp;noCacheIE=1676440945351" id="YJscriptId5"></script><script type="text/javascript" src="https://stevemorse.org/ssn/ssnreverse.php?year=2004&amp;state=California&amp;code=5972416&amp;noCacheIE=1676440945557" id="YJscriptId6"></script><script type="text/javascript" src="https://stevemorse.org/jcal/proxycode.php?auth=&amp;noCacheIE=1676440951207" id="YJscriptId7"></script><script type="text/javascript" src="https://stevemorse.org/ssn/ssnreverse.php?year=2004&amp;state=California&amp;sslast=602-43-XXX&amp;code=7572519&amp;noCacheIE=1676440951385" id="YJscriptId8"></script></head>
+
+  <body onload="GetOffenders();GetState()" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important;">
+
+    <center>
+      <font size="5">
+        Decoding Social Security Numbers in One Step
+        <br>
+        (for numbers issued prior to June 25, 2011)
+      </font>
+      <br><br>
+      <font size="4">
+        <script>
+          if (!offender) document.write('<a href="' + emailurl + '">');
+          document.write("Stephen P.Morse");
+          if (!offender) document.write("</a>")
+          document.write(", San Francisco");
+        </script><a href="mailto:steve@stevemorse.org" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;">Stephen P.Morse</a>, San Francisco
+      </font>
+      <br>
+      <br>
+    </center>
+
+    <form name="display">
+
+      <input type="hidden" name="code" style="--placeholder-color:rgba(232, 229, 227, 0.6) !important; color: rgb(209, 203, 199) !important;" value="7572519">
+ 
+      <center>
+        <input type="button" value="Structure of SS Numbers" onclick="OpenWindow('http://web.archive.org/web/20100816142710/http://w2.eff.org/Privacy/ID_SSN_fingerprinting/ssn_structure.article','','ssn');" style="background-color: rgb(23, 27, 28) !important; --placeholder-color:rgba(232, 229, 227, 0.6) !important; color: rgb(200, 192, 188) !important; border-color: rgb(81, 70, 67) !important;">
+        <input type="button" value="My Other Webpages" onclick="window.location='../index.html'" style="background-color: rgb(23, 27, 28) !important; --placeholder-color:rgba(232, 229, 227, 0.6) !important; color: rgb(200, 192, 188) !important; border-color: rgb(81, 70, 67) !important;">
+        <br><br>
+      </center>
+
+      <hr style="border-color: rgb(123, 107, 101) !important;">
+
+      <div id="offenders" style="display:none">
+      <center>
+        <table style="color: rgb(209, 203, 199) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">
+This page is involved with decoding social security numbers (SSNs) in order to find out when and where they were issued.
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">
+If you came here from a page that talks about restoring your credit rating, you are in the wrong place.
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">
+Please don't ask me any questions about fixing credit ratings, obtaining new SSNs, or obtaining CPNs (whatever that is).
+            </td>
+          </tr>
+        </tbody></table>
+      </center>
+      <hr style="border-color: rgb(126, 109, 103) !important;">
+      </div>
+
+      <center>
+        <br>
+        <b><font size="+1">Three-Digit Decoder</font></b>
+        <br><br>
+        <table style="color: rgb(209, 203, 199) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b> SSN starting with</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <select name="ssn" onchange="GetState();" onkeyup="GetState();" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+                <script>
+                  for (var i=0; i<list.length; i++) {
+                    var state = list[i].substr(11);
+                    var number = list[i].substr(0,10);
+                    document.write('<option value="'+state+'">'+number+'</option>');
+                  }
+                </script><option value="New Hampshire">001 to 003</option><option value="Maine">004 to 007</option><option value="Vermont">008 to 009</option><option value="Massachusetts">010 to 034</option><option value="Rhode Island">035 to 039</option><option value="Connecticut">040 to 049</option><option value="New York">050 to 134</option><option value="New Jersey">135 to 158</option><option value="Pennsylvania">159 to 211</option><option value="Maryland">212 to 220</option><option value="Delaware">221 to 222</option><option value="Virginia (1936-2004)">223 to 231</option><option value="North Carolina and West Virginia">232 to 232</option><option value="West Virginia">233 to 236</option><option value="North Carolina (1936-2002)">237 to 246</option><option value="South Carolina (1936-1996)">247 to 251</option><option value="Georgia (1936-1997)">252 to 260</option><option value="Florida (1936-1980)">261 to 267</option><option value="Ohio">268 to 302</option><option value="Indiana">303 to 317</option><option value="Illinois">318 to 361</option><option value="Michigan">362 to 386</option><option value="Wisconsin">387 to 399</option><option value="Kentucky">400 to 407</option><option value="Tennessee (1936-2005)">408 to 415</option><option value="Alabama">416 to 424</option><option value="Mississippi (1936-2007)">425 to 428</option><option value="Arkansas (1936-2001)">429 to 432</option><option value="Louisiana (1936-1999)">433 to 439</option><option value="Oklahoma">440 to 448</option><option value="Texas (1936-1988)">449 to 467</option><option value="Minnesota">468 to 477</option><option value="Iowa">478 to 485</option><option value="Missouri">486 to 500</option><option value="North Dakota">501 to 502</option><option value="South Dakota">503 to 504</option><option value="Nebraska">505 to 508</option><option value="Kansas">509 to 515</option><option value="Montana">516 to 517</option><option value="Idaho">518 to 519</option><option value="Wyoming">520 to 520</option><option value="Colorado (1936-1996)">521 to 524</option><option value="New Mexico (1936-1993)">525 to 525</option><option value="Arizona (1936-1983)">526 to 527</option><option value="Utah (1936-1992)">528 to 529</option><option value="Nevada (1936-1997)">530 to 530</option><option value="Washington">531 to 539</option><option value="Oregon">540 to 544</option><option value="California (1936-1987)">545 to 573</option><option value="Alaska">574 to 574</option><option value="Hawaii (1936-2004)">575 to 576</option><option value="District of Columbia">577 to 579</option><option value="Virgin Islands">580 to 580</option><option value="Puerto Rico (1936-1985)">580 to 584</option><option value="New Mexico (1958-1993)">585 to 585</option><option value="Pacific Islands">586 to 586</option><option value="Mississippi (1964-2007)">587 to 588</option><option value="Florida (1980-2001)">589 to 595</option><option value="Puerto Rico (1985-....)">596 to 599</option><option value="Arizona (1983-2000)">600 to 601</option><option value="California (1987-....)">602 to 626</option><option value="Texas (1988-....)">627 to 645</option><option value="Utah (1989-....)">646 to 647</option><option value="New Mexico (1993-....)">648 to 649</option><option value="Colorado (1996-....)">650 to 653</option><option value="South Carolina (1997-....)">654 to 658</option><option value="Louisiana (2000-....)">659 to 665</option><option value="unassigned-1">666 to 666</option><option value="Georgia (1997-....)">667 to 675</option><option value="Arkansas (2001-....)">676 to 679</option><option value="Nevada (1997-....)">680 to 680</option><option value="North Carolina (2002-....)">681 to 690</option><option value="Virginia (2004-....)">691 to 699</option><option value="Railroad workers (1936-1963)">700 to 728</option><option value="Enumeraton at Entry (2003-....)">729 to 733</option><option value="unassigned-2">734 to 749</option><option value="Hawaii (2004-....)">750 to 751</option><option value="Mississippi (2007-....)">752 to 755</option><option value="Tennessee (2006-....)">756 to 763</option><option value="Arizona (2000-....)">764 to 765</option><option value="Florida (2001-....)">766 to 772</option><option value="unassigned-3">773 to 799</option><option value="not valid">800 to 899</option><option value="Individual Taxpayer Identification Number">900 to 999</option>
+              </select>
+              - XX - XXXX
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b>was issued in</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <select name="state" onchange="GetSSN();" onkeyup="GetSSN();" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+                <script>
+                  for (var i=0; i<reverseList.length; i++) {
+                    var state = reverseList[i].substr(11);
+                    var number = reverseList[i].substr(0,10);
+                    document.write('<option value="'+number+'">'+state+'</option>');
+                  }
+                </script><option value="416 to 424">Alabama</option><option value="574 to 574">Alaska</option><option value="526 to 527">Arizona (1936-1983)</option><option value="600 to 601">Arizona (1983-2000)</option><option value="764 to 765">Arizona (2000-....)</option><option value="429 to 432">Arkansas (1936-2001)</option><option value="676 to 679">Arkansas (2001-....)</option><option value="545 to 573">California (1936-1987)</option><option value="602 to 626">California (1987-....)</option><option value="521 to 524">Colorado (1936-1996)</option><option value="650 to 653">Colorado (1996-....)</option><option value="040 to 049">Connecticut</option><option value="221 to 222">Delaware</option><option value="577 to 579">District of Columbia</option><option value="729 to 733">Enumeraton at Entry (2003-....)</option><option value="261 to 267">Florida (1936-1980)</option><option value="589 to 595">Florida (1980-2001)</option><option value="766 to 772">Florida (2001-....)</option><option value="252 to 260">Georgia (1936-1997)</option><option value="667 to 675">Georgia (1997-....)</option><option value="575 to 576">Hawaii (1936-2004)</option><option value="750 to 751">Hawaii (2004-....)</option><option value="518 to 519">Idaho</option><option value="318 to 361">Illinois</option><option value="303 to 317">Indiana</option><option value="900 to 999">Individual Taxpayer Identification Number</option><option value="478 to 485">Iowa</option><option value="509 to 515">Kansas</option><option value="400 to 407">Kentucky</option><option value="433 to 439">Louisiana (1936-1999)</option><option value="659 to 665">Louisiana (2000-....)</option><option value="004 to 007">Maine</option><option value="212 to 220">Maryland</option><option value="010 to 034">Massachusetts</option><option value="362 to 386">Michigan</option><option value="468 to 477">Minnesota</option><option value="425 to 428">Mississippi (1936-2007)</option><option value="587 to 588">Mississippi (1964-2007)</option><option value="752 to 755">Mississippi (2007-....)</option><option value="486 to 500">Missouri</option><option value="516 to 517">Montana</option><option value="505 to 508">Nebraska</option><option value="530 to 530">Nevada (1936-1997)</option><option value="680 to 680">Nevada (1997-....)</option><option value="001 to 003">New Hampshire</option><option value="135 to 158">New Jersey</option><option value="525 to 525">New Mexico (1936-1993)</option><option value="585 to 585">New Mexico (1958-1993)</option><option value="648 to 649">New Mexico (1993-....)</option><option value="050 to 134">New York</option><option value="237 to 246">North Carolina (1936-2002)</option><option value="681 to 690">North Carolina (2002-....)</option><option value="232 to 232">North Carolina and West Virginia</option><option value="501 to 502">North Dakota</option><option value="268 to 302">Ohio</option><option value="440 to 448">Oklahoma</option><option value="540 to 544">Oregon</option><option value="586 to 586">Pacific Islands</option><option value="159 to 211">Pennsylvania</option><option value="580 to 584">Puerto Rico (1936-1985)</option><option value="596 to 599">Puerto Rico (1985-....)</option><option value="700 to 728">Railroad workers (1936-1963)</option><option value="035 to 039">Rhode Island</option><option value="247 to 251">South Carolina (1936-1996)</option><option value="654 to 658">South Carolina (1997-....)</option><option value="503 to 504">South Dakota</option><option value="408 to 415">Tennessee (1936-2005)</option><option value="756 to 763">Tennessee (2006-....)</option><option value="449 to 467">Texas (1936-1988)</option><option value="627 to 645">Texas (1988-....)</option><option value="528 to 529">Utah (1936-1992)</option><option value="646 to 647">Utah (1989-....)</option><option value="008 to 009">Vermont</option><option value="580 to 580">Virgin Islands</option><option value="223 to 231">Virginia (1936-2004)</option><option value="691 to 699">Virginia (2004-....)</option><option value="531 to 539">Washington</option><option value="233 to 236">West Virginia</option><option value="387 to 399">Wisconsin</option><option value="520 to 520">Wyoming</option><option value="800 to 899">not valid</option><option value="666 to 666">unassigned-1</option><option value="734 to 749">unassigned-2</option><option value="773 to 799">unassigned-3</option>
+              </select>
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <font size="2"><i>
+                Where card was issued, not where person was born
+              </i></font>
+            </td>
+          </tr>
+        </tbody></table>
+        <br><br>
+      </center>
+
+      <hr style="border-color: rgb(123, 107, 101) !important;">
+
+      <center>
+
+        <br>
+        <b><font size="+1">Five-Digit Decoder</font></b>
+        <br><br>
+<!--
+<font color="red">
+Due to heavy usage, I've had to restrict access to the Five-Digit Decoder
+<br>
+Each person is allowed only ten such decodes per day
+<br><br>
+</font>
+-->
+        <table style="color: rgb(209, 203, 199) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b> SSN starting with</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <select name="ssn1" onchange="AreaChanged()" onkeyup="AreaChanged()" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+                <script>
+                  for (var i=1; i<=999; i++) {
+                    var ii = "00" + i; // pad with leading zeroes
+                    ii = ii.substr(ii.length-3);
+                    document.write("<option>"+ii+"</option>");
+                  }
+                </script><option>001</option><option>002</option><option>003</option><option>004</option><option>005</option><option>006</option><option>007</option><option>008</option><option>009</option><option>010</option><option>011</option><option>012</option><option>013</option><option>014</option><option>015</option><option>016</option><option>017</option><option>018</option><option>019</option><option>020</option><option>021</option><option>022</option><option>023</option><option>024</option><option>025</option><option>026</option><option>027</option><option>028</option><option>029</option><option>030</option><option>031</option><option>032</option><option>033</option><option>034</option><option>035</option><option>036</option><option>037</option><option>038</option><option>039</option><option>040</option><option>041</option><option>042</option><option>043</option><option>044</option><option>045</option><option>046</option><option>047</option><option>048</option><option>049</option><option>050</option><option>051</option><option>052</option><option>053</option><option>054</option><option>055</option><option>056</option><option>057</option><option>058</option><option>059</option><option>060</option><option>061</option><option>062</option><option>063</option><option>064</option><option>065</option><option>066</option><option>067</option><option>068</option><option>069</option><option>070</option><option>071</option><option>072</option><option>073</option><option>074</option><option>075</option><option>076</option><option>077</option><option>078</option><option>079</option><option>080</option><option>081</option><option>082</option><option>083</option><option>084</option><option>085</option><option>086</option><option>087</option><option>088</option><option>089</option><option>090</option><option>091</option><option>092</option><option>093</option><option>094</option><option>095</option><option>096</option><option>097</option><option>098</option><option>099</option><option>100</option><option>101</option><option>102</option><option>103</option><option>104</option><option>105</option><option>106</option><option>107</option><option>108</option><option>109</option><option>110</option><option>111</option><option>112</option><option>113</option><option>114</option><option>115</option><option>116</option><option>117</option><option>118</option><option>119</option><option>120</option><option>121</option><option>122</option><option>123</option><option>124</option><option>125</option><option>126</option><option>127</option><option>128</option><option>129</option><option>130</option><option>131</option><option>132</option><option>133</option><option>134</option><option>135</option><option>136</option><option>137</option><option>138</option><option>139</option><option>140</option><option>141</option><option>142</option><option>143</option><option>144</option><option>145</option><option>146</option><option>147</option><option>148</option><option>149</option><option>150</option><option>151</option><option>152</option><option>153</option><option>154</option><option>155</option><option>156</option><option>157</option><option>158</option><option>159</option><option>160</option><option>161</option><option>162</option><option>163</option><option>164</option><option>165</option><option>166</option><option>167</option><option>168</option><option>169</option><option>170</option><option>171</option><option>172</option><option>173</option><option>174</option><option>175</option><option>176</option><option>177</option><option>178</option><option>179</option><option>180</option><option>181</option><option>182</option><option>183</option><option>184</option><option>185</option><option>186</option><option>187</option><option>188</option><option>189</option><option>190</option><option>191</option><option>192</option><option>193</option><option>194</option><option>195</option><option>196</option><option>197</option><option>198</option><option>199</option><option>200</option><option>201</option><option>202</option><option>203</option><option>204</option><option>205</option><option>206</option><option>207</option><option>208</option><option>209</option><option>210</option><option>211</option><option>212</option><option>213</option><option>214</option><option>215</option><option>216</option><option>217</option><option>218</option><option>219</option><option>220</option><option>221</option><option>222</option><option>223</option><option>224</option><option>225</option><option>226</option><option>227</option><option>228</option><option>229</option><option>230</option><option>231</option><option>232</option><option>233</option><option>234</option><option>235</option><option>236</option><option>237</option><option>238</option><option>239</option><option>240</option><option>241</option><option>242</option><option>243</option><option>244</option><option>245</option><option>246</option><option>247</option><option>248</option><option>249</option><option>250</option><option>251</option><option>252</option><option>253</option><option>254</option><option>255</option><option>256</option><option>257</option><option>258</option><option>259</option><option>260</option><option>261</option><option>262</option><option>263</option><option>264</option><option>265</option><option>266</option><option>267</option><option>268</option><option>269</option><option>270</option><option>271</option><option>272</option><option>273</option><option>274</option><option>275</option><option>276</option><option>277</option><option>278</option><option>279</option><option>280</option><option>281</option><option>282</option><option>283</option><option>284</option><option>285</option><option>286</option><option>287</option><option>288</option><option>289</option><option>290</option><option>291</option><option>292</option><option>293</option><option>294</option><option>295</option><option>296</option><option>297</option><option>298</option><option>299</option><option>300</option><option>301</option><option>302</option><option>303</option><option>304</option><option>305</option><option>306</option><option>307</option><option>308</option><option>309</option><option>310</option><option>311</option><option>312</option><option>313</option><option>314</option><option>315</option><option>316</option><option>317</option><option>318</option><option>319</option><option>320</option><option>321</option><option>322</option><option>323</option><option>324</option><option>325</option><option>326</option><option>327</option><option>328</option><option>329</option><option>330</option><option>331</option><option>332</option><option>333</option><option>334</option><option>335</option><option>336</option><option>337</option><option>338</option><option>339</option><option>340</option><option>341</option><option>342</option><option>343</option><option>344</option><option>345</option><option>346</option><option>347</option><option>348</option><option>349</option><option>350</option><option>351</option><option>352</option><option>353</option><option>354</option><option>355</option><option>356</option><option>357</option><option>358</option><option>359</option><option>360</option><option>361</option><option>362</option><option>363</option><option>364</option><option>365</option><option>366</option><option>367</option><option>368</option><option>369</option><option>370</option><option>371</option><option>372</option><option>373</option><option>374</option><option>375</option><option>376</option><option>377</option><option>378</option><option>379</option><option>380</option><option>381</option><option>382</option><option>383</option><option>384</option><option>385</option><option>386</option><option>387</option><option>388</option><option>389</option><option>390</option><option>391</option><option>392</option><option>393</option><option>394</option><option>395</option><option>396</option><option>397</option><option>398</option><option>399</option><option>400</option><option>401</option><option>402</option><option>403</option><option>404</option><option>405</option><option>406</option><option>407</option><option>408</option><option>409</option><option>410</option><option>411</option><option>412</option><option>413</option><option>414</option><option>415</option><option>416</option><option>417</option><option>418</option><option>419</option><option>420</option><option>421</option><option>422</option><option>423</option><option>424</option><option>425</option><option>426</option><option>427</option><option>428</option><option>429</option><option>430</option><option>431</option><option>432</option><option>433</option><option>434</option><option>435</option><option>436</option><option>437</option><option>438</option><option>439</option><option>440</option><option>441</option><option>442</option><option>443</option><option>444</option><option>445</option><option>446</option><option>447</option><option>448</option><option>449</option><option>450</option><option>451</option><option>452</option><option>453</option><option>454</option><option>455</option><option>456</option><option>457</option><option>458</option><option>459</option><option>460</option><option>461</option><option>462</option><option>463</option><option>464</option><option>465</option><option>466</option><option>467</option><option>468</option><option>469</option><option>470</option><option>471</option><option>472</option><option>473</option><option>474</option><option>475</option><option>476</option><option>477</option><option>478</option><option>479</option><option>480</option><option>481</option><option>482</option><option>483</option><option>484</option><option>485</option><option>486</option><option>487</option><option>488</option><option>489</option><option>490</option><option>491</option><option>492</option><option>493</option><option>494</option><option>495</option><option>496</option><option>497</option><option>498</option><option>499</option><option>500</option><option>501</option><option>502</option><option>503</option><option>504</option><option>505</option><option>506</option><option>507</option><option>508</option><option>509</option><option>510</option><option>511</option><option>512</option><option>513</option><option>514</option><option>515</option><option>516</option><option>517</option><option>518</option><option>519</option><option>520</option><option>521</option><option>522</option><option>523</option><option>524</option><option>525</option><option>526</option><option>527</option><option>528</option><option>529</option><option>530</option><option>531</option><option>532</option><option>533</option><option>534</option><option>535</option><option>536</option><option>537</option><option>538</option><option>539</option><option>540</option><option>541</option><option>542</option><option>543</option><option>544</option><option>545</option><option>546</option><option>547</option><option>548</option><option>549</option><option>550</option><option>551</option><option>552</option><option>553</option><option>554</option><option>555</option><option>556</option><option>557</option><option>558</option><option>559</option><option>560</option><option>561</option><option>562</option><option>563</option><option>564</option><option>565</option><option>566</option><option>567</option><option>568</option><option>569</option><option>570</option><option>571</option><option>572</option><option>573</option><option>574</option><option>575</option><option>576</option><option>577</option><option>578</option><option>579</option><option>580</option><option>581</option><option>582</option><option>583</option><option>584</option><option>585</option><option>586</option><option>587</option><option>588</option><option>589</option><option>590</option><option>591</option><option>592</option><option>593</option><option>594</option><option>595</option><option>596</option><option>597</option><option>598</option><option>599</option><option>600</option><option>601</option><option>602</option><option>603</option><option>604</option><option>605</option><option>606</option><option>607</option><option>608</option><option>609</option><option>610</option><option>611</option><option>612</option><option>613</option><option>614</option><option>615</option><option>616</option><option>617</option><option>618</option><option>619</option><option>620</option><option>621</option><option>622</option><option>623</option><option>624</option><option>625</option><option>626</option><option>627</option><option>628</option><option>629</option><option>630</option><option>631</option><option>632</option><option>633</option><option>634</option><option>635</option><option>636</option><option>637</option><option>638</option><option>639</option><option>640</option><option>641</option><option>642</option><option>643</option><option>644</option><option>645</option><option>646</option><option>647</option><option>648</option><option>649</option><option>650</option><option>651</option><option>652</option><option>653</option><option>654</option><option>655</option><option>656</option><option>657</option><option>658</option><option>659</option><option>660</option><option>661</option><option>662</option><option>663</option><option>664</option><option>665</option><option>666</option><option>667</option><option>668</option><option>669</option><option>670</option><option>671</option><option>672</option><option>673</option><option>674</option><option>675</option><option>676</option><option>677</option><option>678</option><option>679</option><option>680</option><option>681</option><option>682</option><option>683</option><option>684</option><option>685</option><option>686</option><option>687</option><option>688</option><option>689</option><option>690</option><option>691</option><option>692</option><option>693</option><option>694</option><option>695</option><option>696</option><option>697</option><option>698</option><option>699</option><option>700</option><option>701</option><option>702</option><option>703</option><option>704</option><option>705</option><option>706</option><option>707</option><option>708</option><option>709</option><option>710</option><option>711</option><option>712</option><option>713</option><option>714</option><option>715</option><option>716</option><option>717</option><option>718</option><option>719</option><option>720</option><option>721</option><option>722</option><option>723</option><option>724</option><option>725</option><option>726</option><option>727</option><option>728</option><option>729</option><option>730</option><option>731</option><option>732</option><option>733</option><option>734</option><option>735</option><option>736</option><option>737</option><option>738</option><option>739</option><option>740</option><option>741</option><option>742</option><option>743</option><option>744</option><option>745</option><option>746</option><option>747</option><option>748</option><option>749</option><option>750</option><option>751</option><option>752</option><option>753</option><option>754</option><option>755</option><option>756</option><option>757</option><option>758</option><option>759</option><option>760</option><option>761</option><option>762</option><option>763</option><option>764</option><option>765</option><option>766</option><option>767</option><option>768</option><option>769</option><option>770</option><option>771</option><option>772</option><option>773</option><option>774</option><option>775</option><option>776</option><option>777</option><option>778</option><option>779</option><option>780</option><option>781</option><option>782</option><option>783</option><option>784</option><option>785</option><option>786</option><option>787</option><option>788</option><option>789</option><option>790</option><option>791</option><option>792</option><option>793</option><option>794</option><option>795</option><option>796</option><option>797</option><option>798</option><option>799</option><option>800</option><option>801</option><option>802</option><option>803</option><option>804</option><option>805</option><option>806</option><option>807</option><option>808</option><option>809</option><option>810</option><option>811</option><option>812</option><option>813</option><option>814</option><option>815</option><option>816</option><option>817</option><option>818</option><option>819</option><option>820</option><option>821</option><option>822</option><option>823</option><option>824</option><option>825</option><option>826</option><option>827</option><option>828</option><option>829</option><option>830</option><option>831</option><option>832</option><option>833</option><option>834</option><option>835</option><option>836</option><option>837</option><option>838</option><option>839</option><option>840</option><option>841</option><option>842</option><option>843</option><option>844</option><option>845</option><option>846</option><option>847</option><option>848</option><option>849</option><option>850</option><option>851</option><option>852</option><option>853</option><option>854</option><option>855</option><option>856</option><option>857</option><option>858</option><option>859</option><option>860</option><option>861</option><option>862</option><option>863</option><option>864</option><option>865</option><option>866</option><option>867</option><option>868</option><option>869</option><option>870</option><option>871</option><option>872</option><option>873</option><option>874</option><option>875</option><option>876</option><option>877</option><option>878</option><option>879</option><option>880</option><option>881</option><option>882</option><option>883</option><option>884</option><option>885</option><option>886</option><option>887</option><option>888</option><option>889</option><option>890</option><option>891</option><option>892</option><option>893</option><option>894</option><option>895</option><option>896</option><option>897</option><option>898</option><option>899</option><option>900</option><option>901</option><option>902</option><option>903</option><option>904</option><option>905</option><option>906</option><option>907</option><option>908</option><option>909</option><option>910</option><option>911</option><option>912</option><option>913</option><option>914</option><option>915</option><option>916</option><option>917</option><option>918</option><option>919</option><option>920</option><option>921</option><option>922</option><option>923</option><option>924</option><option>925</option><option>926</option><option>927</option><option>928</option><option>929</option><option>930</option><option>931</option><option>932</option><option>933</option><option>934</option><option>935</option><option>936</option><option>937</option><option>938</option><option>939</option><option>940</option><option>941</option><option>942</option><option>943</option><option>944</option><option>945</option><option>946</option><option>947</option><option>948</option><option>949</option><option>950</option><option>951</option><option>952</option><option>953</option><option>954</option><option>955</option><option>956</option><option>957</option><option>958</option><option>959</option><option>960</option><option>961</option><option>962</option><option>963</option><option>964</option><option>965</option><option>966</option><option>967</option><option>968</option><option>969</option><option>970</option><option>971</option><option>972</option><option>973</option><option>974</option><option>975</option><option>976</option><option>977</option><option>978</option><option>979</option><option>980</option><option>981</option><option>982</option><option>983</option><option>984</option><option>985</option><option>986</option><option>987</option><option>988</option><option>989</option><option>990</option><option>991</option><option>992</option><option>993</option><option>994</option><option>995</option><option>996</option><option>997</option><option>998</option><option>999</option>
+              </select>
+              -
+              <select name="ssn2" onchange="forwardPending = true;GetCode()" onkeyup="forwardPending = true;GetCode()" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+                <option></option>
+                <script>
+                  for (var i=1; i<=99; i++) {
+                    var ii = "0" + i; // pad with leading zeroes
+                    ii = ii.substr(ii.length-2);
+                    var selected = (i == 1) ? " selected" : "";
+                    document.write("<option" + selected + ">"+ii+"</option>");
+                  }
+                </script><option selected="">01</option><option>02</option><option>03</option><option>04</option><option>05</option><option>06</option><option>07</option><option>08</option><option>09</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option><option>32</option><option>33</option><option>34</option><option>35</option><option>36</option><option>37</option><option>38</option><option>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option><option>47</option><option>48</option><option>49</option><option>50</option><option>51</option><option>52</option><option>53</option><option>54</option><option>55</option><option>56</option><option>57</option><option>58</option><option>59</option><option>60</option><option>61</option><option>62</option><option>63</option><option>64</option><option>65</option><option>66</option><option>67</option><option>68</option><option>69</option><option>70</option><option>71</option><option>72</option><option>73</option><option>74</option><option>75</option><option>76</option><option>77</option><option>78</option><option>79</option><option>80</option><option>81</option><option>82</option><option>83</option><option>84</option><option>85</option><option>86</option><option>87</option><option>88</option><option>89</option><option>90</option><option>91</option><option>92</option><option>93</option><option>94</option><option>95</option><option>96</option><option>97</option><option>98</option><option>99</option>
+              </select>
+              - XXXX
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b>was issued in</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <span name="wherewhen" id="wherewhen">602-43: California, 2003-2004</span>
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <font size="2"><i>
+                Where and when card was issued, not where and when person was born
+              </i></font>
+            </td>
+        </tr></tbody></table>
+        <br><br>
+      </center>
+
+      <hr style="border-color: rgb(123, 107, 101) !important;">
+
+<!--
+      <center>
+
+        <br>
+        <b><font size="+1">Nine-Digit Validator</font></b>
+        <br><br>
+        <table>
+          <tr>
+            <td><b> SSN</b></td>
+            <td>
+              <select name="ssn11" onchange="ValidateChange();">
+                <script>
+                  for (var i=1; i<=999; i++) {
+                    var ii = "00" + i; // pad with leading zeroes
+                    ii = ii.substr(ii.length-3);
+                    document.write("<option>"+ii+"</option>");
+                  }
+                </script>
+              </select>
+              -
+              <select name="ssn12" onchange="ValidateChange();">
+                <script>
+                  for (var i=1; i<=99; i++) {
+                    var ii = "0" + i; // pad with leading zeroes
+                    ii = ii.substr(ii.length-2);
+                    selected = (i == 1) ? " selected" : "";
+                    document.write("<option" + selected + ">"+ii+"</option>");
+                  }
+                </script>
+              </select>
+              -
+              <select name="ssn13" onchange="ValidateChange();">
+                <script>
+                  for (var i=1; i<=9999; i++) {
+                    var ii = "000" + i; // pad with leading zeroes
+                    ii = ii.substr(ii.length-4);
+                    selected = (i == 1) ? " selected" : "";
+                    document.write("<option" + selected + ">"+ii+"</option>");
+                  }
+                </script>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Last Name</td>
+            <td><input name="name" onkeyup="ValidateChange();"></td>
+          </tr>
+          <tr>
+            <td>
+              <input type="button" value="Validate" onclick="Validate();">        
+            </td>
+            <td>
+              <font color="red"><span name="validate" id="validate">Answer will appear here</span></font>
+            </td>
+          </tr>
+        </table>
+        <br><br>
+
+      </center>
+
+      <hr>
+-->
+
+      <center>
+        <br>
+        <b><font size="+1">State/Year Decoder</font></b>
+        <br><br>
+        <table style="color: rgb(209, 203, 199) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b>In the year</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <select name="yearReverse" onchange="reversePending = true;GetCode();" onkeyup="reversePending = true;GetCode();" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+                <script>
+                  for (var i=1936; i<=2011; i++) {
+                    document.write("<option value='" + i + "'>" + i + "</option>");
+                  }
+                </script><option value="1936">1936</option><option value="1937">1937</option><option value="1938">1938</option><option value="1939">1939</option><option value="1940">1940</option><option value="1941">1941</option><option value="1942">1942</option><option value="1943">1943</option><option value="1944">1944</option><option value="1945">1945</option><option value="1946">1946</option><option value="1947">1947</option><option value="1948">1948</option><option value="1949">1949</option><option value="1950">1950</option><option value="1951">1951</option><option value="1952">1952</option><option value="1953">1953</option><option value="1954">1954</option><option value="1955">1955</option><option value="1956">1956</option><option value="1957">1957</option><option value="1958">1958</option><option value="1959">1959</option><option value="1960">1960</option><option value="1961">1961</option><option value="1962">1962</option><option value="1963">1963</option><option value="1964">1964</option><option value="1965">1965</option><option value="1966">1966</option><option value="1967">1967</option><option value="1968">1968</option><option value="1969">1969</option><option value="1970">1970</option><option value="1971">1971</option><option value="1972">1972</option><option value="1973">1973</option><option value="1974">1974</option><option value="1975">1975</option><option value="1976">1976</option><option value="1977">1977</option><option value="1978">1978</option><option value="1979">1979</option><option value="1980">1980</option><option value="1981">1981</option><option value="1982">1982</option><option value="1983">1983</option><option value="1984">1984</option><option value="1985">1985</option><option value="1986">1986</option><option value="1987">1987</option><option value="1988">1988</option><option value="1989">1989</option><option value="1990">1990</option><option value="1991">1991</option><option value="1992">1992</option><option value="1993">1993</option><option value="1994">1994</option><option value="1995">1995</option><option value="1996">1996</option><option value="1997">1997</option><option value="1998">1998</option><option value="1999">1999</option><option value="2000">2000</option><option value="2001">2001</option><option value="2002">2002</option><option value="2003">2003</option><option value="2004">2004</option><option value="2005">2005</option><option value="2006">2006</option><option value="2007">2007</option><option value="2008">2008</option><option value="2009">2009</option><option value="2010">2010</option><option value="2011">2011</option>
+              </select>
+            </td>
+            <td style="color: rgb(209, 203, 199) !important;">&nbsp;&nbsp;&nbsp;</td>
+            <td style="color: rgb(209, 203, 199) !important;"><b>the state of</b></td>
+            <td style="color: rgb(209, 203, 199) !important;">
+              <select name="stateReverse" onchange="reversePending = true;GetCode();" onkeyup="reversePending = true;GetCode();" style="background-color: rgb(34, 36, 37) !important; color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+              <option value="AL">Alabama</option>
+              <option value="AK">Alaska</option>
+              <option value="AZ">Arizona</option>
+              <option value="AR">Arkansas</option>
+              <option value="CA">California</option>
+              <option value="CO">Colorado</option>
+              <option value="CT">Connecticut</option>
+              <option value="DE">Delaware</option>
+              <option value="DC">District of Columbia</option>
+              <option value="FL">Florida</option>
+              <option value="GA">Georgia</option>
+              <option value="HI">Hawaii</option>
+              <option value="ID">Idaho</option>
+              <option value="IL">Illinois</option>
+              <option value="IN">Indiana</option>
+              <option value="IA">Iowa</option>
+              <option value="KS">Kansas</option>
+              <option value="KY">Kentucky</option>
+              <option value="LA">Louisiana</option>
+              <option value="ME">Maine</option>
+              <option value="MD">Maryland</option>
+              <option value="MA">Massachusetts</option>
+              <option value="MI">Michigan</option>
+              <option value="MN">Minnesota</option>
+              <option value="MS">Mississippi</option>
+              <option value="MO">Missouri</option>
+              <option value="MT">Montana</option>
+              <option value="NE">Nebraska</option>
+              <option value="NV">Nevada</option>
+              <option value="NH">New Hampshire</option>
+              <option value="NJ">New Jersey</option>
+              <option value="NM">New Mexico</option>
+              <option value="NY">New York</option>
+              <option value="NC">North Carolina</option>
+              <option value="ND">North Dakota</option>
+              <option value="OH">Ohio</option>
+              <option value="OK">Oklahoma</option>
+              <option value="OR">Oregon</option>
+              <option value="PA">Pennsylvania</option>
+              <option value="RI">Rhode Island</option>
+              <option value="SC">South Carolina</option>
+              <option value="SD">South Dakota</option>
+              <option value="TN">Tennessee</option>
+              <option value="TX">Texas</option>
+              <option value="UT">Utah</option>
+              <option value="VT">Vermont</option>
+              <option value="VA">Virginia</option>
+              <option value="WA">Washington</option>
+              <option value="WV">West Virginia</option>
+              <option value="WI">Wisconsin</option>
+              <option value="WY">Wyoming</option>
+              </select>
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;"><b>issued SSN</b></td>
+            <td style="color: rgb(209, 203, 199) !important;"><span id="what">602-45-XXX</span></td>
+            <td style="color: rgb(209, 203, 199) !important;">&nbsp;&nbsp;&nbsp;</td>
+            <td style="color: rgb(209, 203, 199) !important;"><input type="button" value="More" onclick="morePending = true;GetCode();" style="background-color: rgb(23, 27, 28) !important; --placeholder-color:rgba(232, 229, 227, 0.6) !important; color: rgb(200, 192, 188) !important; border-color: rgb(81, 70, 67) !important;"></td>
+          </tr>
+        </tbody></table>
+        <br><br>
+      </center>
+      <hr style="border-color: rgb(123, 107, 101) !important;">
+ 
+      <center>
+        <br>
+        <b><font size="+1">Three-Digit Assignment Chart</font></b>
+        <br><br>
+        <table border="1" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">0xx, 1xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">2xx, 3xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">4xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">5xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">5xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">6xx</td>
+            <td align="center" style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">7xx, 8xx, 9xx</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">001-003 NH</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">212-220 MD</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">400-407 KY</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">501-502 ND</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">540-544 OR</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">600-601 AZ</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">700-728 RR*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">004-007 ME</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">221-222 DE</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">408-415 TN</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">503-504 SD</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">545-573 CA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">602-626 CA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">729-733 EE*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">008-009 VT</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">223-231 VA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">416-424 AL</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">505-508 NE</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">574-574 AK</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">627-645 TX</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">734-749 XX*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">010-034 MA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">232-232 NW*</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">425-428 MS</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">509-515 KS</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">575-576 HI</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">646-647 UT</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">750-751 HI</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">035-039 RI</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">233-236 WV</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">429-432 AR</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">516-517 MT</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">577-579 DC</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">648-649 NM</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">752-755 MS</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">040-049 CT</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">237-246 NC*</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">433-439 LA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">518-519 ID</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">580-580 PV*</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">650-653 CO</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">756-763 TN</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">050-134 NY</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">247-251 SC</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">440-448 OK</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">520-520 WY</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">581-584 PR</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">654-658 SC</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">764-765 AZ</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">135-158 NJ</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">252-260 GA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">449-467 TX</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">521-524 CO</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">585-585 NM</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">659-665 LA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">766-772 FL</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">159-211 PA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">261-267 FL</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">468-477 MN</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">525-525 NM</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">586-586 PI*</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">666-666 XX*</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">773-799 XX*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">268-302 OH</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">478-485 IA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">526-527 AZ</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">587-588 MS</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">667-675 GA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">800-899 YY*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">303-317 IN</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">486-500 MO</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">528-529 UT</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">589-595 FL</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">676-679 AR</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">900-999 ITIN*</td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">318-361 IL</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">530-530 NV</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">596-599 PR</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">680-680 NV</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">362-386 MI</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">531-539 WA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">681-690 NC</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">387-399 WI</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;">691-699 VA</td>
+            <td style="color: rgb(209, 203, 199) !important; border-color: rgb(123, 107, 101) !important;"></td>
+          </tr>
+        </tbody></table>
+        <br>
+        <table style="color: rgb(209, 203, 199) !important;">
+          <tbody style="color: rgb(209, 203, 199) !important;"><tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">NW*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              North Carolina if next two digits are 30, otherwise West Virginia
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">NC*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              <a href="http://www.socialsecurity.gov/employer/stateweb.htm" target="_blank" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;">The government's SSA site </a> indicates that the range 237-246 was unassigned
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">&nbsp;</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              All other references I've seen indicate that it was assigned to North Carolina
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">PV*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Puerto Rico, Virgin Islands
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">PI*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Pacific Islands (Guam, American Samoa, Northern Mariana Islands, Philippines)
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">RR*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Railroad Workers (prior to July 1, 1963)
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">EE*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Enumeration at Entry
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">ITIN*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Individual Taxpayer Identification Number if next two digits are in range 70-88
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">XX*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Unassigned as of June 25, 2011
+            </td>
+          </tr>
+          <tr style="color: rgb(209, 203, 199) !important;">
+            <td style="color: rgb(209, 203, 199) !important;">YY*</td>
+            <td colspan="20" style="color: rgb(209, 203, 199) !important;">
+              Not valid (after June 25, 2011: appears to be used for non-citizen parent of a US born child)
+            </td>
+          </tr>
+        </tbody></table>
+      </center>
+
+      <hr style="border-color: rgb(123, 107, 101) !important;">
+
+    </form>
+
+    <font size="2">
+      <br><br>
+      The structure of Social Security Numbers can be found in
+<!--
+        <a href="http://www.eff.org/Privacy/ID_SSN_fingerprinting/ssn_structure.article" target="_blank">
+-->
+        <a href="http://web.archive.org/web/20100816142710/http://w2.eff.org/Privacy/ID_SSN_fingerprinting/ssn_structure.article" target="_blank" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;">
+          Jerry Crow and Barbara Bennett's article
+        </a>.
+      <br>
+      Later number assignments can be found at the
+        <a href="http://www.socialsecurity.gov/employer/ssnvhighgroup.htm" target="_blank" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;">
+          Social Security Administration website
+        </a> 
+      <br>
+      The structure of Individual Taxpayer Identification Numbers can be found on the
+        <a href="https://www.irs.gov/individuals/international-taxpayers/general-itin-information" target="_blank" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;">
+          Internal Revue Service website
+        </a>.
+      <br>
+      This page was automatically updated monthly through June 2011.  Since then it has been static.
+      <br><br>
+      © Stephen P. Morse, 2007
+    </font>
+    <br><a href="../index.html" target="_top" style="--link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;"><img src="../favicon.jpg" style="filter: saturate(0.9) brightness(0.8); --link-color:rgb(117, 182, 234) !important; --link-color-hover:rgb(144, 196, 238) !important; --link-color-active:rgb(113, 179, 234) !important; --visited-color:rgb(160, 117, 234) !important; --visited-color-hover:rgb(179, 144, 238) !important; --visited-color-active:rgb(157, 113, 234) !important;"></a>
+
+  
+
+</body><svg id="midnight-lizard-filters" style="height: 0px; width: 0px; position: absolute;"><filter id="ml-blue-filter" color-interpolation-filters="sRGB" x="0" y="0" width="99999" height="99999"></filter><filter id="ml-content-filter" color-interpolation-filters="sRGB" x="0" y="0" width="99999" height="99999"></filter><filter id="pdf-bg-filter" color-interpolation-filters="sRGB" x="0" y="0" width="99999" height="99999"><feComponentTransfer><feFuncR type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></feFuncR><feFuncG type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></feFuncG><feFuncB type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></feFuncB></feComponentTransfer><feColorMatrix result="selectedColor" type="matrix" values="1 0 0 0 0
+                                               0 1 0 0 0
+                                               0 0 1 0 0
+                                               1 1 1 1 -3"></feColorMatrix><feFlood flood-color="rgb(240, 240, 240)"></feFlood><feComposite operator="in" in2="selectedColor"></feComposite><feComposite operator="over" in2="SourceGraphic"></feComposite></filter></svg></html>

@@ -9,5 +9,12 @@ edition = "2021"
 name = "dev-site"
 path = "src/main.rs"
 
+[env]
+PUB_DIR = { value = "res", relative = true } # Directory for front end files
+
 [dependencies]
 webserver = { path="../lib" }
+reqwest = "0.11.14"
+pollster = "0.3.0"
+tokio = { version = "1.12.0", features = ["full"] }
+async-std = { version = "1", features = ["attributes", "tokio1"] }

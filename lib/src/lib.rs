@@ -1,15 +1,25 @@
 use std::{sync::Arc, net::TcpListener};
 
-pub mod server;
+mod server;
 pub use server::{
     Server as Server,
     ServerInitOptions as ServerInitOptions,
 };
-pub mod router;
+mod error;
+pub use error::Error as Error;
+mod router;
 pub use router::{
     Router as Router,
     Route as Route,
 };
+mod templates;
+pub use templates::{
+    Templates as Templates
+};
+pub use macros;
+
+pub mod http;
+pub use http::HttpResponse as HttpResponse;
 
 
 
