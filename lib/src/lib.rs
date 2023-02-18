@@ -19,7 +19,6 @@ pub use templates::{
 pub use macros;
 
 pub mod http;
-pub use http::HttpResponse as HttpResponse;
 
 
 

@@ -1,6 +1,6 @@
 use std::{net::TcpStream, sync::Arc, fmt};
 
-use crate::HttpResponse;
+use crate::http::HttpResponse;
 
 
 pub enum Error {

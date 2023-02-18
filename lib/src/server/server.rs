@@ -1,6 +1,7 @@
 use std::{sync::{Arc, Mutex, MutexGuard}, net::{TcpListener, TcpStream}, io::{BufReader, BufRead, Write}, str};
 
-use crate::{Router, Route, Templates, ServerInitOptions, HttpResponse};
+use crate::{Router, Route, Templates, ServerInitOptions,
+http::HttpResponse};
 
 use super::ThreadPool;
 #[allow(dead_code)]

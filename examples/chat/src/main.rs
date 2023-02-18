@@ -1,7 +1,14 @@
 use std::{collections::HashMap, ops::Range};
-
+use serde::{Deserialize, Serialize};
+use serde_json::{}
 
 use webserver::{Server, ServerInitOptions, Route, macros::get, Templates, HttpResponse};
+
+#[derive(Serialize, Deserialize)]
+
+pub struct Message {
+    
+}
 
 fn main() {
     // Create a Server Instance using ServerInitOptions
