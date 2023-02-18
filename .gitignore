@@ -1,2 +1,4 @@
 target/
-main/src/personal.rs
+examples/target/
+examples/Cargo.lock
+Cargo.lock
