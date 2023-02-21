@@ -54,3 +54,12 @@ fn main() {
     server.start()
 }
 ```
+
+## Currently in development
+- Adding Http struct's for Response, Request and other parsing of Http data.
+- Adding variable route paths
+- Adding query variables 
+
+## Would like suggestions or help on
+- Security and ddos attack protection
+- input validation 
