@@ -1,6 +1,7 @@
-use std::{net::TcpStream, sync::Arc, fmt};
+use std::{net::TcpStream, sync::Arc, fmt, collections::HashMap};
+use regex::Regex;
 
-use crate::http::HttpResponse;
+use crate::{http::{HttpResponse, HttpRequest}};
 
 
 pub enum Error {
@@ -27,10 +28,8 @@ impl Router {
             routes: Vec::new(),
         }
     }
-
-    pub fn handle_connection(&mut self, stream: TcpStream) {
-
-    }
+    
+    
     pub fn register(&mut self, route: Route) {
         self.routes.push(route);
     }
@@ -44,23 +43,36 @@ impl Router {
 }
 
 
-
+/// Route Struct, defines a url path and a function to call when the page is entered
+/// create variable paths like:
+/// 
+/// "api/posts/<post_id>/"
+/// 
+/// or for multiple:
+/// 
+/// "api/posts/<user_id>/<post_id"
+/// 
+/// Will create a Route with a path of "/api/posts"
+/// and a 
 pub struct Route {
     pub path: String,
-    pub callback: Box<dyn FnMut() -> HttpResponse + Sync + Send + 'static>,
+    pub callback: Box<dyn FnMut(HttpRequest) -> HttpResponse + Sync + Send + 'static>,
 }
+
+
 
 impl Route {
     pub fn new<F>(path: &str, callback: F)  -> Self 
-    where F: FnMut() -> HttpResponse + Sync + Send + 'static {
+    where F: FnMut(HttpRequest) -> HttpResponse + Sync + Send + 'static {
         
         Route {
             path: String::from(path),
             callback: Box::new(callback),
         }
     }
-    pub fn render(&mut self) -> HttpResponse {
-        (self.callback)()
+    
+    pub fn render(&mut self, request: HttpRequest) -> HttpResponse {
+        (self.callback)(request)
     }
 }
 

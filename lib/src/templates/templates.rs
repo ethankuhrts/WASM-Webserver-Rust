@@ -17,10 +17,6 @@ impl Templates {
 
     pub fn render_bytes(file_path: &str) -> Result<Vec<u8>, Error> {
         let path = fs::canonicalize(PathBuf::from(format!("res/{file_path}"))).unwrap();
-        // match fs::read(path) {
-        //     Ok(res) => {println!("{:?}", res); Ok(res)},
-        //     Err(err) => {println!("{err}"); Err(Error::FileNotFound)}
-        // }
 
         let mut f = match fs::File::open(path) {
             Ok(res) => res,

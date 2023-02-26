@@ -1,7 +1,7 @@
-use std::{sync::{Arc, Mutex, MutexGuard}, net::{TcpListener, TcpStream}, io::{BufReader, BufRead, Write}, str};
+use std::{sync::{Arc, Mutex, MutexGuard}, net::{TcpListener, TcpStream}, io::{BufReader, BufRead, Write}, str, default};
 
 use crate::{Router, Route, Templates, ServerInitOptions,
-http::HttpResponse};
+http::{HttpResponse, HttpRequest}, router};
 
 use super::ThreadPool;
 #[allow(dead_code)]
@@ -37,13 +37,15 @@ impl Server {
     pub fn init(&mut self) {
         let mut router = self.router.lock().unwrap();
         
-        let favicon = Route::new("/favicon.ico", || {
-            let mut response = HttpResponse::new();
-            response.content_type = "image/jpeg".to_owned();
-            response.set_body(Templates::render_bytes("favicon.ico").unwrap());
-        
+        let favicon = Route::new("/favicon.ico", |request: HttpRequest| {
+            let mut response = HttpResponse {
+                content_type: String::from("image/jpeg"),
+                body_bytes: Some(Templates::render_bytes("favicon.ico").unwrap()),
+                ..Default::default()
+            };
             return response;
         });
+        
         router.register(favicon);
     }
 
@@ -61,26 +63,63 @@ impl Server {
     }
 
     fn handle_connection(router: Arc<Mutex<Router>>, mut stream: TcpStream) {
-        let buf_reader = BufReader::new(&mut stream);   
+        let buf_reader = BufReader::new(&mut stream);
+        println!("{:?}", buf_reader);
         let http_request: Vec<_> = buf_reader
             .lines()
-            .map(|result| result.unwrap())
-            .take_while(|line| !line.is_empty())
+            .map(|result| result.unwrap() + "\r\n")
+            .take_while(|x| x != "\r\n")
             .collect();
-        let http_request = http_request.join("");
-        
-        let path = &http_request[4..http_request.find(" HTTP/1.1").unwrap_or(http_request.len())];
-        
-        println!("{}", &path);
+        let request = HttpRequest::from_string(&http_request.join(""));
+        println!("{}", request.uri);
         
 
         let mut router = router.lock().unwrap();
-        let route: &mut Route = router.find_route(path).unwrap();        
 
-        let response = route.render();
-        let body = response.body.unwrap().bytes;
-        let header = format!("HTTP/1.1 200 OK\r\nContent-Length:{}\r\n\r\n", &body.len());
+        // try to find the requested route.
+        // if not found try to find the "404" route.
+        // if that isnt found return none, none will be handled later when response is generated
+        let route: Option<&mut Route> = match router.find_route(&request.uri) {
+            Ok(res) => Some(res),
+            Err(err) => {
+                match router.find_route("404") {
+                    Ok(res) => Some(res),
+                    Err(err) => None
+                }
+            },
+        };        
+        
+        // generate response based on route, if route is Some(&mut Route) then we can render it normally
+        // if None then we need to build a generic 404 text response instead.
+        let mut response: HttpResponse = match route {
+            Some(r) => r.render(request),
+            None => {
+                HttpResponse {
+                    status: String::from("404 Not Found"),
+                    body: String::from("404 Page Not Found"),
+                    ..Default::default()
+                }
+            }
+        };
+        
+        // parse the body of the response 
+        // if response.body is some then we can just accept that (means its utf-8 compatible)
+        // if its none it likely means its non utf-8 and is already in a bytes form
+        // if both are empty then there just isn't a body and we need to make an empty filler one
+        // TODO! possibly move this to the http_response struct impl OR to a future response trait.
+        response.pack();
+        let mut body = match response.body_bytes {
+            Some(res) => res,
+            None => vec![],
+        };
+        let bytes = body.as_slice();
+
+        let header = format!(
+            "HTTP/{} {}\r\nContent-Length:{}\r\nContent-Type:{}\r\n\r\n", 
+            response.version, response.status, bytes.len(), response.content_type
+        );
         stream.write_all(header.as_bytes()).unwrap();
-        stream.write_all(body.as_slice()).unwrap();
+        stream.write_all(bytes);
+        
     }
 }

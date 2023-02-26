@@ -1,13 +1,20 @@
 use std::{collections::HashMap, ops::Range};
 use serde::{Deserialize, Serialize};
-use serde_json::{}
 
-use webserver::{Server, ServerInitOptions, Route, macros::get, Templates, HttpResponse};
+
+use webserver::{Server, ServerInitOptions, Route, macros::get, Templates};
+use webserver::http::{HttpResponse, HttpBody, HttpRequest};
 
 #[derive(Serialize, Deserialize)]
-
 pub struct Message {
-    
+    sender: usize,
+    content: String,
+}
+impl HttpBody for Message {
+    fn to_bytes(self) -> Vec<u8> { 
+        let text = serde_json::to_string(&self).unwrap();
+        return text.to_bytes();
+    }
 }
 
 fn main() {
@@ -34,13 +41,15 @@ fn main() {
     // Get a mutable reference to the Router
     // The router is behind a Mutex so we must lock it to access it
     let mut router = server.router();
-
-    let index = Route::new("/", || -> HttpResponse {
-        let mut response = HttpResponse::new();
-        response.set_body(Templates::render("index.html").unwrap());
+    
+    let index = Route::new("/", |request: HttpRequest| {
+        let mut response = HttpResponse {
+            content_type: String::from("text/html"),
+            body: Templates::render("index.html").unwrap(),
+            ..Default::default()
+        };
         return response;
     });
-
     
 
     // Register the index route we made

@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use super::MessageBody;
+use super::HttpBody;
 
 pub enum ContentType {
     TextHtml,
@@ -32,7 +32,7 @@ pub struct ResponseBody {
 }
 
 impl ResponseBody {
-    pub fn from<B>(body: B) -> Self where B: MessageBody + 'static {
+    pub fn from<B>(body: B) -> Self where B: HttpBody + 'static {
         ResponseBody { bytes: body.to_bytes() }
     }
 }
@@ -49,22 +49,33 @@ pub struct HttpResponse {
     pub version: f32,
     pub status: String,
     pub content_type: String,
-    pub body: Option<ResponseBody>,
-
+    pub body: String,
+    pub body_bytes: Option<Vec<u8>>,
 }
 
 impl HttpResponse {
-    pub fn new() -> Self {
-        HttpResponse { 
-            version: 1.1, 
-            status: String::from("200 OK"), 
-            content_type: String::from("text/html"),
-            body: None,
+    pub fn pack(&mut self) {
+        match self.body_bytes {
+            Some(_) => {},
+            None => {
+                self.body_bytes = Some(self.body.clone().into_bytes());
+            }
         }
     }
-    pub fn set_body<B>(&mut self, contents: B) where B: MessageBody + 'static {
-        self.body = Some(ResponseBody::from(contents));
+}
+
+impl Default for HttpResponse {
+    fn default() -> Self {
+        Self { 
+            version: 1.1, 
+            status: String::from("200 OK"), 
+            content_type: String::from("text/html"), 
+            body: String::from(""),
+            body_bytes: None,
+        }
     }
+
+    
 }
 
 

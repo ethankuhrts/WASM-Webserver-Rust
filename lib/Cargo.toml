@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 macros = { path = "../macros" }
+regex = "1.7.1"
 
 [build-dependencies]
 anyhow = "1.0"

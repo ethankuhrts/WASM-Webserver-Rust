@@ -2,5 +2,7 @@
 members = [
     "lib",
     "macros",
+
+    "examples/chat",
 ]
 
