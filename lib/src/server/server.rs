@@ -47,6 +47,8 @@ impl Server {
         });
         
         router.register(favicon);
+
+        
     }
 
     pub fn start(&mut self) {
@@ -70,23 +72,24 @@ impl Server {
             .map(|result| result.unwrap() + "\r\n")
             .take_while(|x| x != "\r\n")
             .collect();
-        let request = HttpRequest::from_string(&http_request.join(""));
-        println!("{}", request.uri);
         
+        if http_request.is_empty() {return;}
+        let mut request = HttpRequest::from_string(&http_request.join(""));
 
         let mut router = router.lock().unwrap();
 
         // try to find the requested route.
         // if not found try to find the "404" route.
         // if that isnt found return none, none will be handled later when response is generated
-        let route: Option<&mut Route> = match router.find_route(&request.uri) {
-            Ok(res) => Some(res),
+        let route: Option<&mut Route> = match router.find_request_route(&mut request) {
+            Ok(res) => {Some(res)},
             Err(err) => {
                 match router.find_route("404") {
-                    Ok(res) => Some(res),
-                    Err(err) => None
+                    Ok(res) => {Some(res)},
+                    Err(err) => {None}
                 }
-            },
+            }
+            
         };        
         
         // generate response based on route, if route is Some(&mut Route) then we can render it normally

@@ -43,13 +43,27 @@ fn main() {
     let mut router = server.router();
     
     let index = Route::new("/", |request: HttpRequest| {
-        let mut response = HttpResponse {
+        HttpResponse {
             content_type: String::from("text/html"),
             body: Templates::render("index.html").unwrap(),
             ..Default::default()
-        };
-        return response;
+        }
     });
+
+    // createa a dynamic route to add 2 numbers together
+    let dynamic_route = Route::new("/sum/<num1>/<num2>", |request: HttpRequest| {
+        // the route path variables always come in String format, you must parse them manually
+        let num1 = request.path_var["num1"].parse::<f32>().unwrap_or(0.0);
+        let num2 = request.path_var["num2"].parse::<f32>().unwrap_or(0.0);
+        let sum = num1+num2;
+        HttpResponse {
+            content_type: String::from("text/html"),
+            body: String::from(format!("{num1} + {num2} = {sum}")),
+            ..Default::default()
+        }
+    });
+    
+    router.register(dynamic_route);
     
 
     // Register the index route we made

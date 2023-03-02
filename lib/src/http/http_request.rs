@@ -33,18 +33,22 @@ impl HttpMethod {
 #[derive(Debug)]
 pub struct HttpRequest {
     pub method: HttpMethod,
-    pub uri: String,
     pub version: f32,
     pub headers: HashMap<String, String>,
+    pub parameters: HashMap<String, String>,
+    pub path_var: HashMap<String, String>,
+    pub path: String,
     pub host: String,
     pub connection: String,
     pub body: Vec<u8>,
 }
 
+
 impl HttpRequest {
     /// Function to take a Http request from a string and convert it into a request struct.
     /// Input must be a valid HTTP request and NOT an Http response.
-    /// Will return an Error::InvalidRequest if str is not valid HTTP Request.
+    /// WILL PANIC: if input is anything but a valid http request.
+    /// IN THE FUTURE: will return an Error::InvalidRequest if str is not valid HTTP Request.
     /// Example HTTP Request
     /// * GET / HTTP/1.1
     /// * Host: 127.0.0.1:9500
@@ -62,6 +66,7 @@ impl HttpRequest {
     /// * Sec-Fetch-Dest: document
     /// * Accept-Encoding: gzip, deflate, br
     /// * Accept-Language: en-US,en;q=0.9
+    // TODO: Return Result<Self, Error> and add handlers for each part of the process. Reason: Not all requests are in valid HTTP format
     pub fn from_string(request: &str) -> Self {
         // String path to the resource not including website address e.g. https://website.com/blog/17814 has a path of /blog/17814
         let mut path: Option<String> = None;
@@ -105,7 +110,8 @@ impl HttpRequest {
                     if char == "/" && method.is_some() && path.is_some() {
                         rec_buf.clear();
                     }
-                    if char == "%" {
+                    if char == "%" && method.is_some() && path.is_some() {
+                        println!("{:?}", rec_buf[0..rec_buf.len()-1].join(""));
                         version = Some(rec_buf[0..rec_buf.len()-1].join("").parse::<f32>().unwrap());
                     }
                 }
@@ -131,12 +137,30 @@ impl HttpRequest {
             }
             line_index += 1;
         }
+        let path_val = path.unwrap_or("/400".to_owned());
+        let queries: Vec<&str>;
+        let mut parameters: HashMap<String, String> = HashMap::new();
+        
+        let sections: Vec<&str> = path_val.split("?").collect();
+        // TODO:  if sections.len() == 0 { return Error::InvalidRequest }
+        let path = sections[0];
+        if sections.len() == 2 {
+            queries = sections[1].split("&").collect();
+            for q in queries {
+                let qkv: Vec<&str> = q.split("=").collect();
+                parameters.insert(qkv[0].to_owned(), qkv[1..qkv.len()].join(""));
+            }
+        }
+        
+
         HttpRequest {
             method: method.unwrap(),
-            uri: path.unwrap(),
             version: version.unwrap(),
             host: host.unwrap(),
             connection: connection.unwrap(),
+            path: path.to_owned(),
+            parameters: parameters,
+            path_var: HashMap::new(), 
             headers: headers,
             body: body,
 
